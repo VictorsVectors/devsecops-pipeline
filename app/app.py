@@ -387,6 +387,6 @@ if __name__ == "__main__":
     # app.run(debug = True, host = '0.0.0.0', port = app_port)
 
 
-# Temporary debug config - REMOVE BEFORE PROD
-DEBUG_AWS_KEY = "AKIAIOSFODNN7MFAKE01"
-DEBUG_AWS_SECRET = "abc123XYZrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLE"
+
+# Temporary debug token - REMOVE BEFORE PROD
+DEBUG_GITHUB_TOKEN = "ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ012345678"
