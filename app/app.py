@@ -388,5 +388,3 @@ if __name__ == "__main__":
 
 
 
-# Temporary debug token - REMOVE BEFORE PROD
-DEBUG_GITHUB_TOKEN = "ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ012345678"
