@@ -1,0 +1,75 @@
+# =============================================================================
+# Bandit Security Configuration
+# Project: Automated SDLC Security Scanner (DevSecOps Pipeline)
+# Target:  app/app.py - Intentionally Vulnerable Flask Application
+# Maps to: SRQ-006, SRQ-007, SRQ-008 (D1 Security Requirements)
+#
+# Bandit vs Semgrep — why both?
+# Semgrep is pattern-based: matches code structure using AST-aware regex.
+# Bandit is Python-AST-aware: understands Python semantics, data types,
+# and call graphs. They catch different things. For example, Bandit's B301
+# understands that pickle.loads() is called on a bytes object regardless
+# of how the variable was named — Semgrep needs the variable name to match.
+# Running both tools maximises coverage and reduces false negatives.
+# =============================================================================
+
+### Directories to exclude from scanning
+exclude_dirs:
+  - tests
+  - .git
+  - .github
+  - Pipeline
+  - Reporting
+  - Wazuh
+
+### Tests to explicitly run — scoped to vulnerability classes present in app.py
+### Full plugin reference: https://bandit.readthedocs.io/en/latest/plugins/
+tests:
+  # --- Insecure Deserialization (A08:2021) ---
+  # Targets pickle.loads(), pickle.load(), marshal.loads() — maps to SRQ-007, A-T-002
+  - B301   # pickle usage (deserialize)
+  - B302   # marshal usage (deserialize)
+  - B403   # import of pickle module flagged at import time
+
+  # --- SQL Injection (A03:2021) ---
+  # Targets string-based SQL query construction — maps to SRQ-006, A-T-001
+  - B608   # hardcoded SQL expressions with string formatting
+
+  # --- Hardcoded Credentials / Secrets (A02:2021) ---
+  # Targets hardcoded passwords, secret keys, tokens — maps to SRQ-008, A-I-001
+  - B105   # hardcoded password string assigned to variable
+  - B106   # hardcoded password passed as function argument
+  - B107   # hardcoded password in function default argument
+
+  # --- Broken Authentication / Weak Crypto (A07:2021) ---
+  # Targets MD5 usage (password hashing with hashlib.md5) — maps to SRQ-006, A-S-001
+  - B303   # use of MD5 or SHA1 — weak hashing algorithms
+  - B324   # use of hashlib with insecure algorithm
+
+  # --- Security Misconfiguration (A05:2021) ---
+  # Targets Flask debug mode, YAML unsafe load — maps to SRQ-014, A-I-002
+  - B506   # yaml.load() without SafeLoader — maps to A-T-002
+  - B201   # flask debug=True in app.run()
+
+  # --- Information Disclosure (A05:2021) ---
+  # Targets use of assert statements that can be stripped in optimised mode
+  - B101   # use of assert — can be disabled with python -O
+
+  # --- Injection / Code Execution ---
+  # Targets eval(), exec(), and subprocess with shell=True
+  - B307   # use of eval()
+  - B602   # subprocess with shell=True
+  - B605   # start_process_with_a_shell
+
+### Tests to skip — none skipped intentionally in this security-focused project.
+### Skipping tests defeats the purpose of a security scanner.
+### If a finding is a known false positive, document it in the Design Report
+### rather than suppressing it here.
+skips: []
+
+### Plugin-level overrides
+### assert_used: allow asserts in test files only (not relevant here — no test dir)
+assert_used:
+  skips:
+    - '*_test.py'
+    - 'test_*.py'
