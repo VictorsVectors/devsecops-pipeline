@@ -386,14 +386,4 @@ if __name__ == "__main__":
     IOLoop.instance().start()
     # app.run(debug = True, host = '0.0.0.0', port = app_port)
 
-# Temporary debug config - REMOVE BEFORE PROD
-DEBUG_AWS_KEY = "AKIAIOSFODNN7EXAMPLE"
-DEBUG_AWS_SECRET = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
 
-# Temporary debug config - REMOVE BEFORE PROD
-DEBUG_AWS_KEY = "AKIAIOSFODNN7EXAMPLE"
-DEBUG_AWS_SECRET = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-
-# Temporary debug config - REMOVE BEFORE PROD
-DEBUG_AWS_KEY = "AKIAIOSFODNN7EXAMPLE"
-DEBUG_AWS_SECRET = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
