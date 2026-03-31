@@ -3,7 +3,6 @@
 
 **Automated SDLC Security Scanner — DevSecOps Capstone**
 
-Victor Omusi 
 
 ## Overview
 
