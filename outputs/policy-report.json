@@ -1,0 +1,179 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-04-01T06:37:57.478499+00:00",
+  "policy_version": "1.0",
+  "result": "FAIL",
+  "passed": false,
+  "policy_integrity": {
+    "policy_path": "pipeline/policy/policy.yml",
+    "actual_hash": "f4c50bf0a6cf59a5fa60465dd7bd39f0ebd41abceeffaa2e3c3fcae7b07d7ff7",
+    "expected_hash": null,
+    "verified": true,
+    "tamper_alert": false
+  },
+  "thresholds": {
+    "critical": 0,
+    "high": 5,
+    "medium": 15,
+    "low": 999
+  },
+  "severity_counts": {
+    "CRITICAL": 221,
+    "HIGH": 905,
+    "MEDIUM": 1268,
+    "LOW": 406,
+    "INFO": 52
+  },
+  "violations": [
+    {
+      "severity": "CRITICAL",
+      "count": 221,
+      "limit": 0,
+      "excess": 221
+    },
+    {
+      "severity": "HIGH",
+      "count": 905,
+      "limit": 5,
+      "excess": 900
+    },
+    {
+      "severity": "MEDIUM",
+      "count": 1268,
+      "limit": 15,
+      "excess": 1253
+    }
+  ],
+  "secrets_violation": false,
+  "summary": {
+    "total_findings": 2852,
+    "by_tool": {
+      "trivy": 2852
+    },
+    "by_owasp_category": {
+      "A06:2021 - Vulnerable and Outdated Components": 2852
+    }
+  },
+  "top_findings": [
+    {
+      "tool": "trivy",
+      "finding_id": "f463a5eca5d6c9f2",
+      "severity": "CRITICAL",
+      "category": "A06:2021 - Vulnerable and Outdated Components",
+      "file": "devsecops-app:latest | PyYAML:3.12",
+      "line": 0,
+      "rule_id": "CVE-2017-18342",
+      "description": "In PyYAML before 5.1, the yaml.load() API could execute arbitrary code if used with untrusted data. The load() function has been deprecated in version 5.1 and the 'UnsafeLoader' has been introduced for backward compatibility with the function. | FixedIn: 4.1",
+      "cwe": "CWE-502",
+      "timestamp": "2026-04-01T06:30:44.103889+00:00"
+    },
+    {
+      "tool": "trivy",
+      "finding_id": "836b8e70ca6065fe",
+      "severity": "CRITICAL",
+      "category": "A06:2021 - Vulnerable and Outdated Components",
+      "file": "devsecops-app:latest | PyYAML:3.12",
+      "line": 0,
+      "rule_id": "CVE-2020-14343",
+      "description": "A vulnerability was discovered in the PyYAML library in versions before 5.4, where it is susceptible to arbitrary code execution when it processes untrusted YAML files through the full_load method or with the FullLoader loader. Applications that use the library to process untrusted input may be vuln | FixedIn: 5.4",
+      "cwe": "CWE-20",
+      "timestamp": "2026-04-01T06:30:44.103889+00:00"
+    },
+    {
+      "tool": "trivy",
+      "finding_id": "a454af58dc10d482",
+      "severity": "CRITICAL",
+      "category": "A06:2021 - Vulnerable and Outdated Components",
+      "file": "devsecops-app:latest | SQLAlchemy:1.1.11",
+      "line": 0,
+      "rule_id": "CVE-2019-7164",
+      "description": "SQLAlchemy through 1.2.17 and 1.3.x through 1.3.0b2 allows SQL Injection via the order_by parameter. | FixedIn: 1.3.0b3, 1.2.18",
+      "cwe": "CWE-89",
+      "timestamp": "2026-04-01T06:30:44.103889+00:00"
+    },
+    {
+      "tool": "trivy",
+      "finding_id": "def8ed01fcd4e7b7",
+      "severity": "CRITICAL",
+      "category": "A06:2021 - Vulnerable and Outdated Components",
+      "file": "devsecops-app:latest | SQLAlchemy:1.1.11",
+      "line": 0,
+      "rule_id": "CVE-2019-7548",
+      "description": "SQLAlchemy 1.2.17 has SQL Injection when the group_by parameter can be controlled. | FixedIn: 1.2.19",
+      "cwe": "CWE-89",
+      "timestamp": "2026-04-01T06:30:44.103889+00:00"
+    },
+    {
+      "tool": "trivy",
+      "finding_id": "d63120b9edb76c73",
+      "severity": "CRITICAL",
+      "category": "A06:2021 - Vulnerable and Outdated Components",
+      "file": "devsecops-app:latest | binutils:2.25-5+deb8u1",
+      "line": 0,
+      "rule_id": "CVE-2014-9939",
+      "description": "ihex.c in GNU Binutils before 2.26 contains a stack buffer overflow when printing bad bytes in Intel Hex objects.",
+      "cwe": "CWE-119",
+      "timestamp": "2026-04-01T06:30:44.103889+00:00"
+    },
+    {
+      "tool": "trivy",
+      "finding_id": "91ed646c0953b942",
+      "severity": "CRITICAL",
+      "category": "A06:2021 - Vulnerable and Outdated Components",
+      "file": "devsecops-app:latest | binutils:2.25-5+deb8u1",
+      "line": 0,
+      "rule_id": "CVE-2017-6969",
+      "description": "readelf in GNU Binutils 2.28 is vulnerable to a heap-based buffer over-read while processing corrupt RL78 binaries. The vulnerability can trigger program crashes. It may lead to an information leak as well.",
+      "cwe": "CWE-125",
+      "timestamp": "2026-04-01T06:30:44.103889+00:00"
+    },
+    {
+      "tool": "trivy",
+      "finding_id": "40bd7472406885ee",
+      "severity": "CRITICAL",
+      "category": "A06:2021 - Vulnerable and Outdated Components",
+      "file": "devsecops-app:latest | binutils:2.25-5+deb8u1",
+      "line": 0,
+      "rule_id": "CVE-2017-7226",
+      "description": "The pe_ILF_object_p function in the Binary File Descriptor (BFD) library (aka libbfd), as distributed in GNU Binutils 2.28, is vulnerable to a heap-based buffer over-read of size 4049 because it uses the strlen function instead of strnlen, leading to program crashes in several utilities such as addr2line, size, and strings. It could lead to information disclosure as well.",
+      "cwe": "CWE-125",
+      "timestamp": "2026-04-01T06:30:44.103889+00:00"
+    },
+    {
+      "tool": "trivy",
+      "finding_id": "0c2dc7a1b94d49b9",
+      "severity": "CRITICAL",
+      "category": "A06:2021 - Vulnerable and Outdated Components",
+      "file": "devsecops-app:latest | bzip2:1.0.6-7+b3",
+      "line": 0,
+      "rule_id": "CVE-2019-12900",
+      "description": "BZ2_decompress in decompress.c in bzip2 through 1.0.6 has an out-of-bounds write when there are many selectors. | FixedIn: 1.0.6-7+deb8u1",
+      "cwe": "CWE-787",
+      "timestamp": "2026-04-01T06:30:44.103889+00:00"
+    },
+    {
+      "tool": "trivy",
+      "finding_id": "3c49b423a49ce0ee",
+      "severity": "CRITICAL",
+      "category": "A06:2021 - Vulnerable and Outdated Components",
+      "file": "devsecops-app:latest | curl:7.38.0-4+deb8u10",
+      "line": 0,
+      "rule_id": "CVE-2016-7167",
+      "description": "Multiple integer overflows in the (1) curl_escape, (2) curl_easy_escape, (3) curl_unescape, and (4) curl_easy_unescape functions in libcurl before 7.50.3 allow attackers to have unspecified impact via a string of length 0xffffffff, which triggers a heap-based buffer overflow. | FixedIn: 7.38.0-4+deb8u13",
+      "cwe": "CWE-190",
+      "timestamp": "2026-04-01T06:30:44.103889+00:00"
+    },
+    {
+      "tool": "trivy",
+      "finding_id": "8c14a41195f4def9",
+      "severity": "CRITICAL",
+      "category": "A06:2021 - Vulnerable and Outdated Components",
+      "file": "devsecops-app:latest | curl:7.38.0-4+deb8u10",
+      "line": 0,
+      "rule_id": "CVE-2018-1000301",
+      "description": "curl version curl 7.20.0 to and including curl 7.59.0 contains a CWE-126: Buffer Over-read vulnerability in denial of service that can result in curl can be tricked into reading data beyond the end of a heap based buffer used to store downloaded RTSP content.. This vulnerability appears to have been | FixedIn: 7.38.0-4+deb8u11",
+      "cwe": "CWE-125",
+      "timestamp": "2026-04-01T06:30:44.103889+00:00"
+    }
+  ]
+}
