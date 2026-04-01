@@ -1,0 +1,50 @@
+# =============================================================================
+# Policy-as-Code Configuration
+# Project: Automated SDLC Security Scanner (DevSecOps Pipeline)
+# Maps to: SRQ-010 (Known Vulnerability Threshold Enforcement)
+#          SRQ-002 (Policy-as-Code Tamper Detection)
+#
+# This file defines the acceptable risk thresholds for the pipeline.
+# evaluate.py reads this file at runtime and verifies its SHA-256 hash
+# against a known-good value to detect tampering (SRQ-002 / STRIDE P-T-001).
+#
+# Threshold rationale (documented for Design Report Section 18):
+#   CRITICAL: 0 — Zero tolerance. Any critical finding represents an
+#     immediately exploitable vulnerability or RCE-class flaw. No deployment
+#     should proceed with a known critical issue. CVSS >= 9.0.
+#   HIGH: 5 — Small allowance for high findings acknowledges that some
+#     base image CVEs may not yet have fixes available. Reviewers must
+#     triage and accept these findings before deployment.
+#   MEDIUM: 15 — Medium findings are tracked but not pipeline-blocking
+#     in isolation. Accumulation beyond 15 indicates systemic debt.
+#   LOW: 0 (no limit) — Low findings are informational only.
+#
+# fail_on_new_secrets: true — Any secret detected by Trufflehog in git
+#   history immediately fails the pipeline regardless of severity thresholds.
+#   Secrets are categorically different from CVEs — they represent active
+#   credential exposure, not theoretical vulnerability.
+# =============================================================================
+
+thresholds:
+  critical: 0       # Zero tolerance — blocks pipeline immediately
+  high: 5           # Allow up to 5 high findings (base image triage window)
+  medium: 15        # Allow up to 15 medium findings
+  low: 999          # Low findings are informational only — no hard limit
+
+# Secret detection policy — independent of CVE thresholds
+# Any verified or unverified secret in git history fails the pipeline
+fail_on_new_secrets: true
+
+# Scope — which normalized output files evaluate.py should aggregate
+# All paths are relative to the repository root
+input_files:
+  - outputs/sast-normalized.json
+  - outputs/sca-normalized.json
+  - outputs/trivy-normalized.json
+
+# Policy file integrity verification (SRQ-002)
+# SHA-256 hash of this file is computed and logged on every pipeline run.
+# Deviation from the committed hash triggers a STRIDE P-T-001 alert.
+# Hash is updated automatically by evaluate.py after any legitimate change.
+policy_version: "1.0"
+
