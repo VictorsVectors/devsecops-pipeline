@@ -1,0 +1,11 @@
+
+# Pipeline scan outputs - runtime artifacts, not source
+outputs/dc-report/
+outputs/trivy-raw.json
+outputs/trivy-normalized.json
+outputs/sca-normalized.json
+outputs/semgrep-custom-raw.json
+outputs/semgrep-owasp-raw.json
+outputs/bandit-raw.json
+outputs/sast-normalized.json
+outputs/trufflehog-raw.json
