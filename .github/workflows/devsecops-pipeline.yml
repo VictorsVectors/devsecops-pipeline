@@ -1,20 +1,19 @@
 # =============================================================================
-# DevSecOps Pipeline — Phase 1: SAST + Secrets Detection
+# DevSecOps Pipeline — Complete Pipeline (Phase 1 + Phase 2)
 # Project: Automated SDLC Security Scanner
-# Maps to: SRQ-004, SRQ-006, SRQ-007, SRQ-008 (D1 Security Requirements)
+# Maps to: All SRQs (SRQ-001 through SRQ-010)
 #
-# Pipeline stage order rationale (documented for Design Report Section 13):
-# 1. SAST runs before SCA because source code flaws are cheaper to fix early
-#    and don't require building the container. Fast feedback loop.
-# 2. Secrets detection runs alongside SAST — both are static, pre-build checks.
-# 3. SCA + Container scanning run after build (Phase 2, Step 17).
-# 4. DAST runs last — requires a running container (Step 19).
-# 5. Policy gate aggregates all findings and blocks deployment (Step 16).
+# SAST + Secrets Detection
+# SCA + Container Scan + Policy Gate
 #
-# Supply chain security (SRQ-003, P-E-001):
-# All third-party Actions are pinned to full commit SHAs, not mutable tags.
-# This prevents a compromised Action tag from injecting malicious code into
-# the pipeline. SHA pinning is verified on every run.
+# Job execution order:
+#   sast ──────────────────────────────────────┐
+#   secrets-detection ─────────────────────────┤
+#   sca ───────────────────────────────────────┤──► policy-gate
+#   container-scan ────────────────────────────┘
+#
+# SAST, secrets, SCA, and container scan all run in parallel.
+# Policy gate waits for all four to complete before evaluating.
 # =============================================================================
 
 name: DevSecOps Pipeline
@@ -25,14 +24,11 @@ on:
   pull_request:
     branches: [ main ]
 
-# Least-privilege token scope — implements SRQ-005 / STRIDE P-E-001
-# Write permissions are not granted at workflow level. Only contents:read
-# is needed for checkout. Actions that need write scope declare it at job level.
+# Least-privilege token scope — SRQ-005 / STRIDE P-E-001
 permissions:
   contents: read
 
-# Cancel in-progress runs on the same branch to prevent resource exhaustion
-# Mitigates STRIDE P-D-001 (ZAP runner exhaustion scenario)
+# Cancel in-progress runs on the same branch — mitigates P-D-001
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -40,44 +36,33 @@ concurrency:
 jobs:
 
   # ---------------------------------------------------------------------------
-  # Job 1: SAST — Static Application Security Testing
-  # Tools: Semgrep (pattern-based) + Bandit (Python AST-aware)
-  # Why both: Semgrep catches structural patterns; Bandit catches Python
-  # semantic issues regardless of variable naming. Complementary coverage.
+  # Job 1: SAST — Semgrep + Bandit
   # ---------------------------------------------------------------------------
   sast:
     name: "SAST — Semgrep + Bandit"
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
 
     steps:
-      # actions/checkout pinned to SHA — supply chain attack mitigation (SRQ-003)
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        # v4.2.2 — https://github.com/actions/checkout/releases/tag/v4.2.2
+        # v4.2.2
         with:
-          # Fetch full history for Trufflehog git history scanning (SRQ-004)
           fetch-depth: 0
 
       - name: Set up Python 3.10
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
-        # v5.3.0 — https://github.com/actions/setup-python/releases/tag/v5.3.0
+        # v5.3.0
         with:
           python-version: "3.10"
 
       - name: Install SAST dependencies
-        run: |
-          pip install semgrep bandit
+        run: pip install semgrep bandit pyyaml
 
-      # --- Semgrep ---
-      # Runs custom rules + OWASP ruleset
-      # --json outputs machine-readable results for normalize.py
-      # --error exits non-zero on findings (informational here; gate is in policy job)
       - name: Run Semgrep (custom rules)
-        id: semgrep_custom
         run: |
+          mkdir -p outputs
           semgrep \
             --config pipeline/sast/semgrep-rules.yml \
             --json \
@@ -86,7 +71,6 @@ jobs:
         continue-on-error: true
 
       - name: Run Semgrep (OWASP ruleset)
-        id: semgrep_owasp
         run: |
           semgrep \
             --config p/owasp-top-ten \
@@ -95,14 +79,8 @@ jobs:
             app/
         continue-on-error: true
 
-      # --- Bandit ---
-      # -r recursive, -f json for machine-readable output
-      # exit code 1 on findings — continue-on-error so pipeline doesn't
-      # stop here; the policy gate job makes the final pass/fail decision
       - name: Run Bandit
-        id: bandit
         run: |
-          mkdir -p outputs
           bandit \
             -c pipeline/sast/bandit-config.yaml \
             -r app/ \
@@ -110,9 +88,6 @@ jobs:
             -o outputs/bandit-raw.json
         continue-on-error: true
 
-      # --- Normalize ---
-      # Merges Semgrep + Bandit output into unified schema
-      # This is the contract all downstream steps depend on
       - name: Normalize SAST outputs
         run: |
           python3 pipeline/sast/normalize.py \
@@ -120,12 +95,9 @@ jobs:
             --bandit  outputs/bandit-raw.json \
             --output  outputs/sast-normalized.json
 
-      # Upload raw + normalized outputs as workflow artifacts
-      # Implements SRQ-004 audit trail — every run produces downloadable evidence
-      # Note: raw JSON is uploaded as artifact, NOT logged to console (SRQ P-I-001)
       - name: Upload SAST artifacts
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
-        # v4.6.0 — https://github.com/actions/upload-artifact/releases/tag/v4.6.0
+        # v4.6.0
         if: always()
         with:
           name: sast-results
@@ -137,17 +109,11 @@ jobs:
           retention-days: 30
 
   # ---------------------------------------------------------------------------
-  # Job 2: Secrets Detection — Trufflehog full git history scan
-  # Why Trufflehog over GitLeaks: Trufflehog scans the full git commit history,
-  # not just the working tree. A developer who commits a secret and removes it
-  # in the next commit believes they are safe — they are not. The secret lives
-  # in git history and is exposed to anyone who can clone the repo.
-  # This maps directly to SRQ-004 and STRIDE threat P-R-001.
+  # Job 2: Secrets Detection — Trufflehog
   # ---------------------------------------------------------------------------
   secrets-detection:
     name: "Secrets — Trufflehog"
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
 
@@ -157,17 +123,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Install Trufflehog via official install script
       - name: Install Trufflehog
         run: |
-          curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh \
+          curl -sSfL \
+            https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh \
             | sudo sh -s -- -b /usr/local/bin
 
-      # Scan full git history — --results=verified,unknown includes unverified
-      # findings which is correct for a CI gate (flag for human review)
-      # --no-update prevents auto-updater from failing due to permission issues
       - name: Run Trufflehog (full git history)
-        id: trufflehog
         run: |
           mkdir -p outputs
           trufflehog git file://. \
@@ -176,13 +138,214 @@ jobs:
             --results=verified,unknown \
             --json \
             > outputs/trufflehog-raw.json 2>&1 || true
-          echo "Trufflehog scan complete"
-          cat outputs/trufflehog-raw.json
 
-      - name: Upload secrets detection artifacts
+      - name: Upload secrets artifacts
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
         if: always()
         with:
           name: secrets-results
           path: outputs/trufflehog-raw.json
+          retention-days: 30
+
+  # ---------------------------------------------------------------------------
+  # Job 3: SCA — OWASP Dependency-Check
+  # Maps to: SRQ-010, OWASP A06:2021
+  #
+  # Runs via Docker — avoids Java version management on the runner.
+  # NVD API key stored as GitHub Secret (never hardcoded — SRQ-008).
+  # --noupdate would skip the NVD download but requires a cached DB.
+  # First run downloads the full NVD database (~5 min with API key).
+  # ---------------------------------------------------------------------------
+  sca:
+    name: "SCA — OWASP Dependency-Check"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+        with:
+          python-version: "3.10"
+
+      - name: Install SCA normalizer dependencies
+        run: pip install pyyaml
+
+      - name: Create output directories
+        run: mkdir -p outputs/dc-report
+
+      - name: Run OWASP Dependency-Check
+        run: |
+          docker run --rm \
+            -u $(id -u):$(id -g) \
+            --volume ${{ github.workspace }}:/src:z \
+            --volume ${{ github.workspace }}/outputs/dc-report:/report:z \
+            owasp/dependency-check:latest \
+            --scan /src/app/requirements.txt \
+            --format JSON \
+            --project "devsecops-pipeline" \
+            --out /report \
+            --nvdApiKey ${{ secrets.NVD_API_KEY }} \
+            --disableAssembly \
+            --disableNodeJS \
+            --disableYarnAudit \
+            --disableNodeAudit
+        continue-on-error: true
+
+      - name: Normalize SCA output
+        run: |
+          python3 pipeline/sca/normalize-sca.py \
+            --input  outputs/dc-report/dependency-check-report.json \
+            --output outputs/sca-normalized.json
+        continue-on-error: true
+
+      - name: Upload SCA artifacts
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
+        if: always()
+        with:
+          name: sca-results
+          path: |
+            outputs/dc-report/dependency-check-report.json
+            outputs/sca-normalized.json
+          retention-days: 30
+
+  # ---------------------------------------------------------------------------
+  # Job 4: Container Scan — Docker Build + Trivy
+  # Maps to: SRQ-009 (non-root execution), SRQ-010 (CVE threshold)
+  #
+  # Step 1: Build the Docker image from the repo Dockerfile
+  # Step 2: Run Trivy against the built image (vuln + misconfig scanners)
+  # Step 3: Normalize Trivy output to unified schema
+  # ---------------------------------------------------------------------------
+  container-scan:
+    name: "Container — Build + Trivy"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+        with:
+          python-version: "3.10"
+
+      - name: Install container scan normalizer dependencies
+        run: pip install pyyaml
+
+      - name: Build Docker image
+        run: |
+          docker build -t devsecops-app:${{ github.sha }} .
+          docker tag devsecops-app:${{ github.sha }} devsecops-app:latest
+
+      - name: Run Trivy image scan
+        run: |
+          mkdir -p outputs
+          trivy image \
+            --format json \
+            --output outputs/trivy-raw.json \
+            --scanners vuln,misconfig \
+            --timeout 10m \
+            devsecops-app:latest
+        continue-on-error: true
+
+      - name: Normalize Trivy output
+        run: |
+          python3 pipeline/container/normalize-trivy.py \
+            --input  outputs/trivy-raw.json \
+            --output outputs/trivy-normalized.json
+        continue-on-error: true
+
+      - name: Upload container scan artifacts
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
+        if: always()
+        with:
+          name: container-results
+          path: |
+            outputs/trivy-raw.json
+            outputs/trivy-normalized.json
+          retention-days: 30
+
+  # ---------------------------------------------------------------------------
+  # Job 5: Policy Gate — Aggregate + Enforce
+  # Maps to: SRQ-010, SRQ-002
+  #
+  # Waits for ALL prior jobs to complete (needs: [...]).
+  # Downloads all normalized artifacts from prior jobs.
+  # Runs evaluate.py against policy.yml thresholds.
+  # continue-on-error: false — exit code 1 BLOCKS the pipeline.
+  # This is the enforcement mechanism — not just a reporting step.
+  # ---------------------------------------------------------------------------
+  policy-gate:
+    name: "Policy Gate — Enforce"
+    runs-on: ubuntu-latest
+    needs: [sast, secrets-detection, sca, container-scan]
+    if: always()
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+        with:
+          python-version: "3.10"
+
+      - name: Install policy gate dependencies
+        run: pip install pyyaml
+
+      - name: Download SAST results
+        uses: actions/download-artifact@fa0a91b85d4f404e444306234d4d9b633b850f4d
+        # v4.1.8
+        with:
+          name: sast-results
+          path: outputs/
+        continue-on-error: true
+
+      - name: Download SCA results
+        uses: actions/download-artifact@fa0a91b85d4f404e444306234d4d9b633b850f4d
+        with:
+          name: sca-results
+          path: outputs/
+        continue-on-error: true
+
+      - name: Download container scan results
+        uses: actions/download-artifact@fa0a91b85d4f404e444306234d4d9b633b850f4d
+        with:
+          name: container-results
+          path: outputs/
+        continue-on-error: true
+
+      - name: List available outputs
+        run: ls -la outputs/ || echo "No outputs directory"
+
+      # SRQ-002: Verify policy.yml has not been tampered with
+      # Expected hash is stored as a GitHub Secret set during initial setup
+      - name: Run policy gate
+        run: |
+          python3 pipeline/policy/evaluate.py \
+            --policy pipeline/policy/policy.yml \
+            --output outputs/policy-report.json \
+            --expected-hash ${{ secrets.POLICY_YML_HASH }}
+        continue-on-error: false
+
+      - name: Upload policy report
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
+        if: always()
+        with:
+          name: policy-report
+          path: outputs/policy-report.json
           retention-days: 30
