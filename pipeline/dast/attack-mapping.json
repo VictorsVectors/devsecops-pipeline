@@ -1,0 +1,104 @@
+{
+  "_metadata": {
+    "description": "Maps OWASP ZAP alert names to MITRE ATT&CK technique IDs",
+    "project": "Automated SDLC Security Scanner",
+    "maps_to": "SRQ-011 (DAST Active Scan Coverage)",
+    "attack_version": "v16.1",
+    "generated_from": "outputs/zap-raw.json - full scan against vulnerable Flask app",
+    "notes": "Mappings are heuristic. ZAP does not emit ATT&CK IDs natively. Each mapping represents the most applicable technique based on alert category and attack vector. Some alerts map to multiple techniques where the finding enables a chain."
+  },
+  "mappings": [
+    {
+      "zap_alert_name": "Missing Anti-clickjacking Header",
+      "cwe": "CWE-1021",
+      "zap_risk": "Medium",
+      "owasp_2021": "A05:2021 - Security Misconfiguration",
+      "attack_technique_id": "T1185",
+      "attack_technique_name": "Browser Session Hijacking",
+      "attack_tactic": "Collection",
+      "rationale": "Absence of X-Frame-Options or CSP frame-ancestors allows an attacker to embed the target page in a malicious iframe, enabling clickjacking attacks that hijack user interactions and browser sessions without the victim's awareness."
+    },
+    {
+      "zap_alert_name": "Content Security Policy (CSP) Header Not Set",
+      "cwe": "CWE-693",
+      "zap_risk": "Medium",
+      "owasp_2021": "A05:2021 - Security Misconfiguration",
+      "attack_technique_id": "T1059.007",
+      "attack_technique_name": "Command and Scripting Interpreter: JavaScript",
+      "attack_tactic": "Execution",
+      "rationale": "Missing CSP header removes the browser-enforced restriction on script sources, allowing injected or third-party JavaScript to execute without restriction. This directly enables XSS payload execution and data exfiltration via JavaScript."
+    },
+    {
+      "zap_alert_name": "Server Leaks Version Information via \"Server\" HTTP Response Header Field",
+      "cwe": "CWE-497",
+      "zap_risk": "Low",
+      "owasp_2021": "A05:2021 - Security Misconfiguration",
+      "attack_technique_id": "T1082",
+      "attack_technique_name": "System Information Discovery",
+      "attack_tactic": "Discovery",
+      "rationale": "The Server response header discloses the web server name and version (Tornado/x.x.x). Attackers use this during reconnaissance to identify version-specific CVEs and tailor exploitation attempts to the exact software stack."
+    },
+    {
+      "zap_alert_name": "X-Content-Type-Options Header Missing",
+      "cwe": "CWE-693",
+      "zap_risk": "Low",
+      "owasp_2021": "A05:2021 - Security Misconfiguration",
+      "attack_technique_id": "T1059.007",
+      "attack_technique_name": "Command and Scripting Interpreter: JavaScript",
+      "attack_tactic": "Execution",
+      "rationale": "Without the nosniff directive, browsers may MIME-sniff response content and execute files served as text/plain as JavaScript. This enables drive-by script execution when combined with file upload or content injection vulnerabilities present in the target app."
+    },
+    {
+      "zap_alert_name": "Application Error Disclosure",
+      "cwe": "CWE-550",
+      "zap_risk": "Low",
+      "owasp_2021": "A05:2021 - Security Misconfiguration",
+      "attack_technique_id": "T1082",
+      "attack_technique_name": "System Information Discovery",
+      "attack_tactic": "Discovery",
+      "rationale": "Generic application error messages returned to the client reveal internal implementation details such as stack traces, file paths, and library versions. This information directly supports attacker reconnaissance and vulnerability targeting."
+    },
+    {
+      "zap_alert_name": "Information Disclosure - Debug Error Messages",
+      "cwe": "CWE-1295",
+      "zap_risk": "Low",
+      "owasp_2021": "A05:2021 - Security Misconfiguration",
+      "attack_technique_id": "T1082",
+      "attack_technique_name": "System Information Discovery",
+      "attack_tactic": "Discovery",
+      "rationale": "Flask debug=True exposes the Werkzeug interactive debugger and full Python stack traces on the /xxe_uploader endpoint (confirmed 500 response). Stack traces reveal internal file paths, module names, and line numbers, giving attackers a precise map of the application internals. Maps to STRIDE threat A-I-002 in the threat model."
+    },
+    {
+      "zap_alert_name": "Absence of Anti-CSRF Tokens",
+      "cwe": "CWE-352",
+      "zap_risk": "Medium",
+      "owasp_2021": "A01:2021 - Broken Access Control",
+      "attack_technique_id": "T1185",
+      "attack_technique_name": "Browser Session Hijacking",
+      "attack_tactic": "Collection",
+      "rationale": "Forms on /xxe and /yaml endpoints lack CSRF tokens. An attacker can craft a malicious page that silently submits requests to these endpoints using the victim's authenticated session, performing state-changing actions on their behalf without consent."
+    },
+    {
+      "zap_alert_name": "HTTP Only Site",
+      "cwe": "CWE-311",
+      "zap_risk": "Medium",
+      "owasp_2021": "A02:2021 - Cryptographic Failures",
+      "attack_technique_id": "T1557",
+      "attack_technique_name": "Adversary-in-the-Middle",
+      "attack_tactic": "Collection",
+      "rationale": "The application serves exclusively over HTTP with no TLS. All traffic including session tokens, credentials, and sensitive API responses is transmitted in plaintext, enabling network interception via ARP spoofing, rogue access points, or passive sniffing on the same network segment."
+    }
+  ],
+  "unmapped_alerts": [],
+  "coverage_notes": {
+    "total_zap_alerts": 8,
+    "mapped": 8,
+    "unmapped": 0,
+    "limitations": [
+      "ATT&CK technique mapping is heuristic — ZAP does not emit technique IDs natively",
+      "Some alerts (Missing Anti-clickjacking Header, Absence of Anti-CSRF Tokens) share T1185 because both enable session-context abuse via different browser mechanisms",
+      "T1082 appears three times reflecting that multiple distinct information disclosure vectors were confirmed — each maps to a different CWE and disclosure mechanism",
+      "Active scan did not trigger SQL injection or deserialization alerts — these require authenticated sessions or POST payloads that the unauthenticated spider did not reach; SAST findings (Semgrep/Bandit) cover these vulnerability classes"
+    ]
+  }
+}
