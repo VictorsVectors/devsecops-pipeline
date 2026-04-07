@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+
+  flask-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flask-app
+    ports:
+      - "5050:5050"
+    environment:
+      - APP_PORT=5050
+      - FLASK_ENV=development
+    networks:
+      - scan-net
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib2; urllib2.urlopen('http://localhost:5050/')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: "no"
+
+networks:
+  scan-net:
+    driver: bridge
