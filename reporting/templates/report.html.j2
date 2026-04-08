@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Security Assessment Report — {{ run_label }}</title>
+<style>
+  /* =========================================================
+     Base
+  ========================================================= */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "DejaVu Sans", Arial, sans-serif;
+    font-size: 10pt;
+    color: #2c3e50;
+    background: #ffffff;
+    line-height: 1.5;
+  }
+
+  /* =========================================================
+     Page layout (WeasyPrint)
+  ========================================================= */
+  @page {
+    size: letter;
+    margin: 1.8cm 1.5cm 2cm 1.5cm;
+    @bottom-center {
+      content: "Automated SDLC Security Scanner  |  Confidential  |  Page " counter(page) " of " counter(pages);
+      font-size: 8pt;
+      color: #7f8c8d;
+    }
+  }
+
+  @page cover { margin: 0; }
+
+  /* =========================================================
+     Cover page
+  ========================================================= */
+  .cover {
+    page: cover;
+    width: 100%;
+    min-height: 27cm;
+    background: #1a252f;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 3cm 2.5cm;
+    page-break-after: always;
+  }
+
+  .cover-eyebrow {
+    font-size: 9pt;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #e74c3c;
+    margin-bottom: 1.2cm;
+  }
+
+  .cover-title {
+    font-size: 28pt;
+    font-weight: bold;
+    line-height: 1.2;
+    margin-bottom: 0.4cm;
+  }
+
+  .cover-subtitle {
+    font-size: 13pt;
+    color: #bdc3c7;
+    margin-bottom: 2cm;
+  }
+
+  .cover-meta {
+    font-size: 10pt;
+    color: #95a5a6;
+    line-height: 2;
+    border-top: 1px solid #2c3e50;
+    padding-top: 0.8cm;
+    margin-top: auto;
+  }
+
+  .cover-meta strong { color: #ecf0f1; }
+
+  /* =========================================================
+     Section headings
+  ========================================================= */
+  h1 {
+    font-size: 16pt;
+    color: #1a252f;
+    border-bottom: 2.5pt solid #e74c3c;
+    padding-bottom: 4pt;
+    margin: 18pt 0 10pt 0;
+    page-break-after: avoid;
+  }
+
+  h2 {
+    font-size: 12pt;
+    color: #2c3e50;
+    margin: 14pt 0 6pt 0;
+    page-break-after: avoid;
+  }
+
+  p { margin-bottom: 6pt; }
+
+  /* =========================================================
+     Executive summary cards
+  ========================================================= */
+  .summary-grid {
+    display: flex;
+    gap: 10pt;
+    margin: 12pt 0;
+    flex-wrap: wrap;
+  }
+
+  .summary-card {
+    flex: 1;
+    min-width: 90pt;
+    border-radius: 4pt;
+    padding: 10pt 12pt;
+    text-align: center;
+    color: #ffffff;
+  }
+
+  .summary-card .card-number {
+    font-size: 22pt;
+    font-weight: bold;
+    line-height: 1;
+  }
+
+  .summary-card .card-label {
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 3pt;
+    opacity: 0.9;
+  }
+
+  .card-critical { background: #c0392b; }
+  .card-high     { background: #e67e22; }
+  .card-medium   { background: #d4ac0d; color: #1a252f; }
+  .card-low      { background: #27ae60; }
+  .card-info     { background: #7f8c8d; }
+  .card-total    { background: #1a252f; }
+  .card-score    { background: #2980b9; }
+
+  /* =========================================================
+     Policy gate banner
+  ========================================================= */
+  .policy-banner {
+    padding: 10pt 14pt;
+    border-radius: 4pt;
+    margin: 12pt 0;
+    font-size: 11pt;
+    font-weight: bold;
+  }
+
+  .policy-pass { background: #d5f5e3; color: #1e8449; border-left: 4pt solid #27ae60; }
+  .policy-fail { background: #fdecea; color: #922b21; border-left: 4pt solid #c0392b; }
+  .policy-unknown { background: #fef9e7; color: #9a7d0a; border-left: 4pt solid #f1c40f; }
+
+  /* =========================================================
+     Tables
+  ========================================================= */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8pt 0 14pt 0;
+    font-size: 8.5pt;
+  }
+
+  thead tr {
+    background: #1a252f;
+    color: #ffffff;
+  }
+
+  thead th {
+    padding: 7pt 8pt;
+    text-align: left;
+    font-weight: bold;
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  tbody tr:nth-child(even) { background: #f8f9fa; }
+  tbody tr:hover           { background: #eaf0fb; }
+
+  tbody td {
+    padding: 6pt 8pt;
+    vertical-align: top;
+    border-bottom: 0.5pt solid #dee2e6;
+  }
+
+  /* =========================================================
+     Severity badges
+  ========================================================= */
+  .badge {
+    display: inline-block;
+    padding: 2pt 6pt;
+    border-radius: 3pt;
+    font-size: 7.5pt;
+    font-weight: bold;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-CRITICAL { background: #c0392b; }
+  .badge-HIGH     { background: #e67e22; }
+  .badge-MEDIUM   { background: #d4ac0d; color: #1a252f; }
+  .badge-LOW      { background: #27ae60; }
+  .badge-INFO     { background: #7f8c8d; }
+
+  /* =========================================================
+     Tool summary table
+  ========================================================= */
+  .tool-summary-table th,
+  .tool-summary-table td { text-align: center; }
+  .tool-summary-table td:first-child { text-align: left; font-weight: bold; }
+
+  /* =========================================================
+     ATT&CK table
+  ========================================================= */
+  .attack-id {
+    font-family: monospace;
+    font-size: 8pt;
+    background: #eaf0fb;
+    padding: 1pt 4pt;
+    border-radius: 2pt;
+    color: #1a5276;
+  }
+
+  /* =========================================================
+     Finding description (truncated)
+  ========================================================= */
+  .desc-cell {
+    max-width: 220pt;
+    overflow: hidden;
+  }
+
+  .desc-text {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 210pt;
+  }
+
+  /* =========================================================
+     Health score bar
+  ========================================================= */
+  .score-bar-container {
+    background: #ecf0f1;
+    border-radius: 4pt;
+    height: 14pt;
+    width: 100%;
+    margin: 6pt 0;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 4pt;
+    transition: width 0.3s;
+  }
+
+  .score-label {
+    font-size: 11pt;
+    font-weight: bold;
+    margin-bottom: 3pt;
+  }
+
+  /* =========================================================
+     Page breaks
+  ========================================================= */
+  .page-break { page-break-before: always; }
+  .no-break   { page-break-inside: avoid; }
+
+  /* =========================================================
+     Footer note
+  ========================================================= */
+  .report-note {
+    font-size: 8pt;
+    color: #7f8c8d;
+    margin-top: 10pt;
+    padding-top: 6pt;
+    border-top: 0.5pt solid #dee2e6;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     COVER PAGE
+============================================================ -->
+<div class="cover">
+  <div class="cover-eyebrow">Automated SDLC Security Scanner</div>
+  <div class="cover-title">Security Assessment<br>Report</div>
+  <div class="cover-subtitle">{{ run_label }}</div>
+  <div class="cover-meta">
+    <strong>Project</strong> &nbsp; Automated SDLC Security Scanner<br>
+    <strong>Author</strong> &nbsp;&nbsp; Victor Omusi — University of San Diego, CYBR 516<br>
+    <strong>Generated</strong> {{ generated_at }}<br>
+    <strong>Pipeline</strong> &nbsp;SAST · Secrets · SCA · Container · DAST · Policy Gate<br>
+    <strong>Status</strong> &nbsp;&nbsp;
+    {% if policy_status|upper == "PASS" %}
+      ✓ POLICY GATE PASSED
+    {% elif policy_status|upper == "FAIL" %}
+      ✗ POLICY GATE FAILED — DEPLOYMENT BLOCKED
+    {% else %}
+      ⚠ POLICY STATUS UNKNOWN
+    {% endif %}
+  </div>
+</div>
+
+<!-- ============================================================
+     1. EXECUTIVE SUMMARY
+============================================================ -->
+<h1>1. Executive Summary</h1>
+
+<p>
+  This report presents the results of a fully automated security assessment
+  of the intentionally vulnerable target Flask application conducted by the
+  Automated SDLC Security Scanner pipeline. The pipeline integrated five
+  security stages — static analysis (SAST), secrets detection, software
+  composition analysis (SCA), container image scanning, and dynamic
+  application testing (DAST) — producing
+  <strong>{{ total_findings }} deduplicated findings</strong>
+  across all stages.
+</p>
+
+<!-- Policy gate banner -->
+{% if policy_status|upper == "PASS" %}
+<div class="policy-banner policy-pass">
+  ✓ Policy Gate: PASSED — All severity thresholds met. Deployment approved.
+</div>
+{% elif policy_status|upper == "FAIL" %}
+<div class="policy-banner policy-fail">
+  ✗ Policy Gate: FAILED — Severity thresholds exceeded. Deployment blocked.
+</div>
+{% else %}
+<div class="policy-banner policy-unknown">
+  ⚠ Policy Gate: UNKNOWN — Gate result unavailable for this run.
+</div>
+{% endif %}
+
+<!-- Severity summary cards -->
+<div class="summary-grid">
+  <div class="summary-card card-critical">
+    <div class="card-number">{{ severity_counts.CRITICAL }}</div>
+    <div class="card-label">Critical</div>
+  </div>
+  <div class="summary-card card-high">
+    <div class="card-number">{{ severity_counts.HIGH }}</div>
+    <div class="card-label">High</div>
+  </div>
+  <div class="summary-card card-medium">
+    <div class="card-number">{{ severity_counts.MEDIUM }}</div>
+    <div class="card-label">Medium</div>
+  </div>
+  <div class="summary-card card-low">
+    <div class="card-number">{{ severity_counts.LOW }}</div>
+    <div class="card-label">Low</div>
+  </div>
+  <div class="summary-card card-info">
+    <div class="card-number">{{ severity_counts.INFO }}</div>
+    <div class="card-label">Info</div>
+  </div>
+  <div class="summary-card card-total">
+    <div class="card-number">{{ total_findings }}</div>
+    <div class="card-label">Total</div>
+  </div>
+  <div class="summary-card card-score">
+    <div class="card-number">{{ health_score }}</div>
+    <div class="card-label">Health /100</div>
+  </div>
+</div>
+
+<!-- Pipeline health score bar -->
+<h2>Pipeline Health Scorecard</h2>
+{% set score_color = "#27ae60" if health_score >= 70 else ("#e67e22" if health_score >= 40 else "#c0392b") %}
+<div class="score-label">{{ health_score }}/100
+  {% if health_score >= 70 %} — Low Risk
+  {% elif health_score >= 40 %} — Moderate Risk
+  {% else %} — High Risk
+  {% endif %}
+</div>
+<div class="score-bar-container">
+  <div class="score-bar-fill" style="width: {{ health_score }}%; background: {{ score_color }};"></div>
+</div>
+<p style="font-size:8.5pt; color:#555;">
+  Score deducts 20 points per CRITICAL finding, 5 per HIGH, 1 per MEDIUM.
+  A policy gate failure caps the score at 40.
+</p>
+
+
+<!-- ============================================================
+     2. TOOL SUMMARY
+============================================================ -->
+<h1>2. Tool Coverage Summary</h1>
+
+<p>The following table summarizes finding counts by tool and severity band
+after deduplication across the full normalized output set.</p>
+
+<table class="tool-summary-table">
+  <thead>
+    <tr>
+      <th>Tool</th>
+      <th>Stage</th>
+      <th>Raw Input</th>
+      <th>Critical</th>
+      <th>High</th>
+      <th>Medium</th>
+      <th>Low</th>
+      <th>Info</th>
+      <th>Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% set stage_map = {
+      "semgrep": "SAST",
+      "bandit": "SAST",
+      "trufflehog": "Secrets",
+      "owasp-dependency-check": "SCA",
+      "trivy": "Container",
+      "zap-baseline": "DAST",
+      "zap-fullscan": "DAST"
+    } %}
+    {% set raw_map = {
+      "semgrep": raw_counts.sast,
+      "bandit": raw_counts.sast,
+      "trufflehog": raw_counts.secrets,
+      "owasp-dependency-check": raw_counts.sca,
+      "trivy": raw_counts.trivy,
+      "zap-baseline": raw_counts.zap,
+      "zap-fullscan": raw_counts.zap
+    } %}
+    {% for tool, counts in tool_summary.items() %}
+    <tr>
+      <td>{{ tool }}</td>
+      <td>{{ stage_map.get(tool, tool) }}</td>
+      <td>{{ raw_map.get(tool, "—") }}</td>
+      <td>{% if counts.CRITICAL > 0 %}<span class="badge badge-CRITICAL">{{ counts.CRITICAL }}</span>{% else %}—{% endif %}</td>
+      <td>{% if counts.HIGH > 0 %}<span class="badge badge-HIGH">{{ counts.HIGH }}</span>{% else %}—{% endif %}</td>
+      <td>{% if counts.MEDIUM > 0 %}<span class="badge badge-MEDIUM">{{ counts.MEDIUM }}</span>{% else %}—{% endif %}</td>
+      <td>{% if counts.LOW > 0 %}<span class="badge badge-LOW">{{ counts.LOW }}</span>{% else %}—{% endif %}</td>
+      <td>{% if counts.INFO > 0 %}<span class="badge badge-INFO">{{ counts.INFO }}</span>{% else %}—{% endif %}</td>
+      <td><strong>{{ counts.total }}</strong></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+
+<!-- ============================================================
+     3. FINDINGS TABLE
+============================================================ -->
+<div class="page-break"></div>
+<h1>3. Findings Table</h1>
+
+<p>All {{ total_findings }} deduplicated findings sorted by severity.
+  Deduplication key: CWE identifier + file path + line number.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width:8%">ID</th>
+      <th style="width:9%">Severity</th>
+      <th style="width:10%">Tool</th>
+      <th style="width:10%">CWE</th>
+      <th style="width:18%">File / URL</th>
+      <th style="width:5%">Line</th>
+      <th style="width:40%">Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for f in all_findings %}
+    <tr>
+      <td style="font-family:monospace; font-size:7.5pt;">{{ f.finding_id }}</td>
+      <td><span class="badge badge-{{ f.severity|upper }}">{{ f.severity }}</span></td>
+      <td style="font-size:8pt;">{{ f.tool }}</td>
+      <td style="font-family:monospace; font-size:8pt;">{{ f.cwe or "—" }}</td>
+      <td style="font-size:7.5pt; word-break:break-all;">
+        {{ f.file | truncate(45) if f.file else "—" }}
+        {% if f.line and f.line > 0 %}:{{ f.line }}{% endif %}
+      </td>
+      <td style="font-size:8pt;">{{ f.line if f.line and f.line > 0 else "—" }}</td>
+      <td class="desc-cell">
+        <span class="desc-text">{{ f.description | striptags | truncate(120) }}</span>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+
+<!-- ============================================================
+     4. MITRE ATT&CK MAPPING
+============================================================ -->
+<div class="page-break"></div>
+<h1>4. MITRE ATT&CK Mapping</h1>
+
+<p>
+  The following table maps DAST findings from OWASP ZAP to MITRE ATT&CK
+  technique identifiers. Mapping is heuristic — ZAP does not emit ATT&CK
+  IDs natively. Each technique represents the most applicable adversary
+  behavior enabled by the identified vulnerability.
+</p>
+
+{% if zap_with_attack %}
+<table>
+  <thead>
+    <tr>
+      <th style="width:9%">Severity</th>
+      <th style="width:25%">ZAP Alert</th>
+      <th style="width:10%">CWE</th>
+      <th style="width:12%">ATT&CK ID</th>
+      <th style="width:22%">Technique</th>
+      <th style="width:12%">Tactic</th>
+      <th style="width:10%">OWASP</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for f in zap_with_attack %}
+    <tr>
+      <td><span class="badge badge-{{ f.severity|upper }}">{{ f.severity }}</span></td>
+      <td style="font-size:8pt;">
+        {% set desc = f.description %}
+        {% set parts = desc.split("] ", 1) %}
+        {% if parts|length == 2 %}
+          {{ parts[1].split(":")[0] | truncate(40) }}
+        {% else %}
+          {{ f.description | striptags | truncate(40) }}
+        {% endif %}
+      </td>
+      <td style="font-family:monospace; font-size:8pt;">{{ f.cwe or "—" }}</td>
+      <td><span class="attack-id">{{ f.attack_technique_id }}</span></td>
+      <td style="font-size:8pt;">{{ f.attack_technique_name }}</td>
+      <td style="font-size:8pt;">{{ f.attack_tactic }}</td>
+      <td style="font-size:7.5pt;">{{ f.category | truncate(25) }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No DAST findings with ATT&CK mappings available for this run.</p>
+{% endif %}
+
+<div class="report-note">
+  ATT&CK mappings sourced from Pipeline/Dast/attack-mapping.json.
+  MITRE ATT&CK Enterprise Matrix v16.1. Mapping limitations are documented
+  in the coverage_notes section of the mapping file.
+</div>
+
+
+<!-- ============================================================
+     5. POLICY GATE DETAIL
+============================================================ -->
+<div class="page-break"></div>
+<h1>5. Policy Gate Detail</h1>
+
+<p>
+  The policy gate evaluates aggregated findings from all pipeline stages
+  against configurable severity thresholds defined in
+  <code>Pipeline/Policy/policy.yml</code>. A non-zero exit code from
+  <code>evaluate.py</code> blocks deployment. The SHA-256 hash of
+  <code>policy.yml</code> is verified at runtime against the value stored
+  in GitHub Secrets (SRQ-002).
+</p>
+
+{% if policy_data %}
+<table>
+  <thead>
+    <tr><th>Field</th><th>Value</th></tr>
+  </thead>
+  <tbody>
+    {% for key, value in policy_data.items() %}
+    {% if key != "findings" %}
+    <tr>
+      <td style="font-weight:bold; width:30%;">{{ key }}</td>
+      <td style="font-family:monospace; font-size:8.5pt;">
+        {% if value is mapping %}
+          {% for k, v in value.items() %}{{ k }}: {{ v }}  {% endfor %}
+        {% else %}
+          {{ value }}
+        {% endif %}
+      </td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+
+
+<!-- ============================================================
+     6. REPORT METADATA
+============================================================ -->
+<h1>6. Report Metadata</h1>
+
+<table>
+  <thead><tr><th>Field</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>Run Label</td><td>{{ run_label }}</td></tr>
+    <tr><td>Generated</td><td>{{ generated_at }}</td></tr>
+    <tr><td>Total Findings (deduplicated)</td><td>{{ total_findings }}</td></tr>
+    <tr><td>Raw SAST Findings</td><td>{{ raw_counts.sast }}</td></tr>
+    <tr><td>Raw Secrets Findings</td><td>{{ raw_counts.secrets }}</td></tr>
+    <tr><td>Raw SCA Findings</td><td>{{ raw_counts.sca }}</td></tr>
+    <tr><td>Raw Container Findings</td><td>{{ raw_counts.trivy }}</td></tr>
+    <tr><td>Raw DAST Findings</td><td>{{ raw_counts.zap }}</td></tr>
+    <tr><td>Policy Gate Status</td><td>{{ policy_status }}</td></tr>
+    <tr><td>Pipeline Health Score</td><td>{{ health_score }}/100</td></tr>
+    <tr><td>Deduplication Key</td><td>CWE + file + line</td></tr>
+    <tr><td>ATT&CK Version</td><td>v16.1</td></tr>
+    <tr><td>Framework References</td><td>OWASP Top 10:2021, CIS Controls v8, NIST SP 800-218</td></tr>
+  </tbody>
+</table>
+
+<div class="report-note">
+  This report was generated automatically by the Automated SDLC Security Scanner pipeline.
+  Findings represent automated tool output and should be validated by a qualified security
+  analyst before remediation prioritization. Automated scanning cannot detect business logic
+  flaws, race conditions, or authentication-context vulnerabilities.
+  Victor Omusi — Shiley-Marcos School of Engineering, University of San Diego — CYBR 516.
+</div>
+
+</body>
+</html>
