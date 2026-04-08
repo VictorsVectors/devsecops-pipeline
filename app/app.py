@@ -30,7 +30,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 # Flask HMAC signing key hardcoded in source. Exposed if repo is public or
 # image is pushed to a registry. Detected by: Trufflehog, Semgrep secrets rules.
 # Mitigation: Inject via environment variable at runtime.
-app.config['SECRET_KEY_HMAC'] = 'secret'
+app.config['SECRET_KEY_HMAC'] = os.environ.get('SECRET_KEY_HMAC', '')  # REMEDIATED: moved to env var
 
 app.config['SECRET_KEY_HMAC_2'] = 'am0r3C0mpl3xK3y'
 app.secret_key = 'F12Zr47j\3yX R~X@H!jmM]Lwf/,?KT'
@@ -290,11 +290,11 @@ def search_customer():
 # Allows attacker to dump the full database or bypass auth.
 # Detected by: Semgrep python.flask.security.injection.tainted-sql-string,
 # Bandit B608, OWASP ZAP active scan. Maps to STRIDE threat A-T-001.
-                    str_query = "SELECT first_name, last_name, username FROM customer WHERE username = '%s';" % search_term
+                    str_query = "SELECT first_name, last_name, username FROM customer WHERE username = :username"  # REMEDIATED: parameterized query
+                    search_query = db.engine.execute(str_query, username=search_term)
                     # mycust = Customer.query.filter_by(username = search_term).first()
                     # return jsonify({'Customer': mycust.username, 'First Name': mycust.first_name}),200
 
-                    search_query = db.engine.execute(str_query)
                     for result in search_query:
                         results.append(list(result))
                     print(results)
