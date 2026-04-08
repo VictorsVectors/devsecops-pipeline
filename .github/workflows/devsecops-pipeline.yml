@@ -247,6 +247,12 @@ jobs:
           docker build -t devsecops-app:${{ github.sha }} .
           docker tag devsecops-app:${{ github.sha }} devsecops-app:latest
 
+      - name: Install Trivy
+        run: |
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update -qq && sudo apt-get install -y -qq trivy
+
       - name: Run Trivy image scan
         run: |
           mkdir -p outputs
