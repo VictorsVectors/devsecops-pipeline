@@ -308,7 +308,7 @@ jobs:
         run: pip install pyyaml
 
       - name: Download SAST results
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         # v4.1.8
         with:
           name: sast-results
@@ -316,14 +316,14 @@ jobs:
         continue-on-error: true
 
       - name: Download SCA results
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: sca-results
           path: outputs/
         continue-on-error: true
 
       - name: Download container scan results
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: container-results
           path: outputs/
@@ -465,42 +465,42 @@ jobs:
         run: mkdir -p outputs
 
       - name: Download SAST results
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: sast-results
           path: outputs/
         continue-on-error: true
 
       - name: Download secrets results
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: secrets-results
           path: outputs/
         continue-on-error: true
 
       - name: Download SCA results
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: sca-results
           path: outputs/
         continue-on-error: true
 
       - name: Download container scan results
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: container-results
           path: outputs/
         continue-on-error: true
 
       - name: Download DAST results
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: dast-results
           path: outputs/
         continue-on-error: true
 
       - name: Download policy report
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: policy-report
           path: outputs/
@@ -641,42 +641,42 @@ jobs:
         run: mkdir -p outputs
 
       - name: Download SAST results
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: sast-results
           path: outputs/
         continue-on-error: true
 
       - name: Download secrets results
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: secrets-results
           path: outputs/
         continue-on-error: true
 
       - name: Download SCA results
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: sca-results
           path: outputs/
         continue-on-error: true
 
       - name: Download container scan results
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: container-results
           path: outputs/
         continue-on-error: true
 
       - name: Download DAST results
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: dast-results
           path: outputs/
         continue-on-error: true
 
       - name: Download policy report
-        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           name: policy-report
           path: outputs/
