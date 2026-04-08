@@ -308,7 +308,7 @@ jobs:
         run: pip install pyyaml
 
       - name: Download SAST results
-        uses: actions/download-artifact@fa0a91b85d4f404e444306234d4d9b633b850f4d
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
         # v4.1.8
         with:
           name: sast-results
@@ -316,14 +316,14 @@ jobs:
         continue-on-error: true
 
       - name: Download SCA results
-        uses: actions/download-artifact@fa0a91b85d4f404e444306234d4d9b633b850f4d
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
         with:
           name: sca-results
           path: outputs/
         continue-on-error: true
 
       - name: Download container scan results
-        uses: actions/download-artifact@fa0a91b85d4f404e444306234d4d9b633b850f4d
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f6e0b8b9
         with:
           name: container-results
           path: outputs/
