@@ -179,12 +179,22 @@ jobs:
       - name: Create output directories
         run: mkdir -p outputs/dc-report
 
+      - name: Cache NVD database
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf
+        # v4.2.2
+        with:
+          path: ~/.dependency-check/data
+          key: dependency-check-data-${{ runner.os }}
+          restore-keys: |
+            dependency-check-data-
+
       - name: Run OWASP Dependency-Check
         run: |
+          mkdir -p ~/.dependency-check/data
           docker run --rm \
-            -u $(id -u):$(id -g) \
             --volume ${{ github.workspace }}:/src:z \
             --volume ${{ github.workspace }}/outputs/dc-report:/report:z \
+            --volume ~/.dependency-check/data:/usr/share/dependency-check/data:rw \
             owasp/dependency-check:latest \
             --scan /src/app/requirements.txt \
             --format JSON \
@@ -517,7 +527,7 @@ jobs:
 
       - name: Generate security report
         run: |
-          python3 Reporting/generate-report.py \
+          python3 reporting/generate-report.py \
             --run-label "Pipeline Run — ${{ github.sha }}" \
             --output-dir outputs/
         continue-on-error: true
