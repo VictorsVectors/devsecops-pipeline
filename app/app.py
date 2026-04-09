@@ -380,6 +380,17 @@ def deserialize():
     obj = pickle.loads(data)  # Unsafe: executes arbitrary code in malicious payloads
     return str(obj), 200
 
+# VULN: CommandInjection - A03:2021 - Injection
+# User-controlled input passed directly to os.system() without sanitization.
+# Allows attacker to execute arbitrary OS commands on the server.
+# Detected by: Bandit B605, Semgrep. Maps to STRIDE threat A-T-001.
+@app.route("/api/run", methods=["POST"])
+def run_command():
+    # VULN: CommandInjection
+    cmd = request.json.get("cmd", "")
+    os.system(cmd)  # Unsafe: executes arbitrary OS commands
+    return jsonify({"status": "executed"}), 200
+
 if __name__ == "__main__":
     http_server = HTTPServer(WSGIContainer(app))
     http_server.listen(app_port)
