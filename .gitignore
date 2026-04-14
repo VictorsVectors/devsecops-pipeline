@@ -9,3 +9,8 @@ outputs/semgrep-owasp-raw.json
 outputs/bandit-raw.json
 outputs/sast-normalized.json
 outputs/trufflehog-raw.json
+wazuh/config/wazuh_indexer_ssl_certs/
+wazuh/config/certs.yml
+generate-certs.yml
+docker-compose.yml.bak
+wazuh/config/internal_users.yml

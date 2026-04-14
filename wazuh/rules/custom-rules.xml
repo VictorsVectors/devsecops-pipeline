@@ -1,0 +1,4 @@
+<!-- Custom Wazuh detection rules for DevSecOps pipeline -->
+<!-- Step 26 rules will be added here -->
+<group name="devsecops,">
+</group>
